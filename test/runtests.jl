@@ -123,4 +123,43 @@ using Base.Test
         x, al = AugmentedLagrangianMethod.optimize(F, C, initial_x)
         @test norm(x - solution_x, Inf) < 1e-6
     end
+
+    @testset "Nocedal-Wright examples" begin
+        let # 17.1
+            f(x) = x[1]+x[2]
+            ∇f(x) = [1.; 1.]
+            c(x) = x[1]^2+x[2]^2-2
+            ∇c(x) = [2*x[1]; 2*x[2]]
+
+            # Initial value is arbitrary...
+            initial_x = [-0.3, -0.5]
+            solution_x = [-1.0, -1.0]
+            F = DifferentiableFunction(f, (x,g) -> copy!(g, ∇f(x)))
+            C = DifferentiableFunction(c, (x,g) -> copy!(g, ∇c(x)) )
+
+            x, al = AugmentedLagrangianMethod.optimize(F, C, initial_x)
+            @show x
+            @show c(x)
+            @test norm(x - solution_x, Inf) < 1e-6
+        end
+
+        let # Page 500
+            f(x) = -5x[1]^2+x[2]^2
+            ∇f(x) = [-10.0x[1]; 2.0x[2]]
+            c(x) = x[1]-1
+            ∇c(x) = [1; 0]
+
+            # Initial value is arbitrary...
+            initial_x = [3., 0.5]
+            solution_x = [1.0, 0.0]
+            F = DifferentiableFunction(f, (x,g) -> copy!(g, ∇f(x)))
+            C = DifferentiableFunction(c, (x,g) -> copy!(g, ∇c(x)) )
+
+            x, al = AugmentedLagrangianMethod.optimize(F, C, initial_x)
+            @show x
+            @show c(x)
+            @test norm(x - solution_x, Inf) < 1e-6
+        end
+
+    end
 end
