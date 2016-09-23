@@ -19,6 +19,8 @@ using Base.Test
 
     println("------------------------------------------------------------")
     println("       Finite Difference Testing the AL ")
+    @printf("   h   |   err \n")
+    @printf("-------|-------------\n")
     # finite-difference test of the augmented Lagrangian implementation
     al = ALM.AugmentedLagrangian(F, C, x0)
     al.lambda = 0.0
@@ -35,8 +37,9 @@ using Base.Test
           x0[n] -= h
        end
        push!(err, vecnorm(dA - dAh, Inf))
-       println("p = ", p, "; err = ", err[end])
+       @printf(" 1e-%2d |  %1.4e \n", p, err[end])
     end
+    @test minimum(err) < 1e-4 * err[1]
     if minimum(err) < 1e-4 * err[1]
        println("looks like the FD test has passed...")
     else
