@@ -3,10 +3,10 @@ module AugmentedLagrangianMethod
 
 using Optim
 
-type AugmentedLagrangian
+type AugmentedLagrangian{Tl<:Union{Real, Vector}}
    F::DifferentiableFunction
    C::DifferentiableFunction
-   lambda::Vector
+   lambda::Tl
    mu::Real
    Dc::Matrix
 end
