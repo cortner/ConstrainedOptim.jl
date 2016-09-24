@@ -3,18 +3,18 @@ module AugmentedLagrangianMethod
 
 using Optim
 
-type AugmentedLagrangian
+type AugmentedLagrangian{Tl<:Union{Real, Vector}}
    F::DifferentiableFunction
    C::DifferentiableFunction
-   lambda::Real
+   lambda::Tl
    mu::Real
    Dc::Matrix
 end
 
 typealias AL AugmentedLagrangian
 
-dimx(al::AL) = size(Dc,1)  # dimension of state vector
-dimc(al::AL) = size(Dc,2)  # number of constraints
+dim_x(al::AL) = size(Dc,1)  # dimension of state vector
+dim_c(al::AL) = size(Dc,2)  # number of constraints
 
 
 function AugmentedLagrangian(F::DifferentiableFunction,
@@ -24,12 +24,12 @@ function AugmentedLagrangian(F::DifferentiableFunction,
    # TODO: maybe not ideal to evaluate F, C here, maybe better to set
    # dimensions when C is first called??? But see #282
    C0 = C.f(x0)
-   dimx = length(x0)
-   dimc = length(C0)
+   dim_x = length(x0)
+   dim_c = length(C0)
    if lambda == :auto
       lambda = - mu * C0
    end
-   return AugmentedLagrangian(F, C, lambda, mu, zeros(dimx, dimc))
+   return AugmentedLagrangian(F, C, lambda, mu, zeros(dim_c, dim_x))
 end
 
 
@@ -46,7 +46,9 @@ end
 function eval_and_grad!(out, x, al::AL)
    c = al.C.fg!(x, al.Dc)
    f = al.F.fg!(x, out)
-   out[:] += - al.Dc * al.lambda + (1.0*al.mu) * al.Dc * c
+   for i = 1:length(c)
+       out[:] = out - al.lambda[i] * view(al.Dc, i, :) + (1.0*al.mu) * c[i] * view(al.Dc, i, :)
+   end
    return f - dot(c, al.lambda) + (0.5*al.mu) * sumabs2(c)
 end
 

@@ -5,12 +5,12 @@ using Base.Test
 
 @testset "Finite Difference Testing" begin
     f(x) = x[1]^2 + x[2]^2 + x[2]^4
-    df(x) = [2*x[1]; 2*x[2] + 4*x[2]^3]
+    df(x) = [2*x[1], 2*x[2]+4*x[2]^3]
     c(x) = x[1]^2 + (x[2]-0.5)^2 - 2.0
-    dc(x) = [ 2 * x[1]; 2 * (x[2] - 0.5) ]
+    dc(x) = [ 2*x[1] 2*(x[2]-0.5) ]
 
     # the minimiser should be [0.0,0.0]
-    x0 = [1.0; 0.0]
+    x0 = [1.0, 0.0]
 
 
     F = DifferentiableFunction(f, (x,g) -> copy!(g, df(x)) )
@@ -65,9 +65,9 @@ using Base.Test
 @testset "Simple problems" begin
     let
         f(x) = 2x[1]^2+x[2]^2
-        ∇f(x) = [4x[1]; 2x[2]]
+        ∇f(x) = [4x[1], 2x[2]]
         c(x) = sum(x)-1
-        ∇c(x) = ones(2)
+        ∇c(x) = ones(1,2)
         initial_x = [0.3,0.75]
         solution_x = [1/3, 2/3]
         F = DifferentiableFunction(f, (x,g) -> copy!(g, ∇f(x)))
@@ -81,7 +81,7 @@ using Base.Test
         f(x) = -prod(x)
         ∇f(x) = [-x[2]; -x[1]]
         c(x) = sum(x)-6
-        ∇c(x) = ones(2)
+        ∇c(x) = ones(1,2)
         initial_x = [2.0, 2.0]
         solution_x = [3.0, 3.0]
         F = DifferentiableFunction(f, (x,g) -> copy!(g, ∇f(x)))
@@ -105,11 +105,11 @@ using Base.Test
 
         # Cost
         f(x) = dot(w,x)
-        ∇f(x) = [w[1]; w[2]]
+        ∇f(x) = [w[1], w[2]]
 
         # Cobb-Douglas Production function
         c(x) = (x[1]^γ[1])*(x[2]^γ[2])-q
-        ∇c(x) = [γ[1]*(x[1]^(γ[1]-1))*(x[2]^γ[2]); (x[1]^γ[1])*γ[2]*(x[2]^(γ[2]-1))]
+        ∇c(x) = [γ[1]*(x[1]^(γ[1]-1))*(x[2]^γ[2]) (x[1]^γ[1])*γ[2]*(x[2]^(γ[2]-1))]
 
         # Some guess (it doesn't even produce the correct amount...)
         initial_x = [1., 2.]
@@ -127,9 +127,9 @@ using Base.Test
     @testset "Nocedal-Wright examples" begin
         let # 17.1
             f(x) = x[1]+x[2]
-            ∇f(x) = [1.; 1.]
+            ∇f(x) = [1., 1.]
             c(x) = x[1]^2+x[2]^2-2
-            ∇c(x) = [2*x[1]; 2*x[2]]
+            ∇c(x) = [2*x[1] 2*x[2]]
 
             # Initial value is arbitrary...
             initial_x = [-0.3, -0.5]
@@ -138,16 +138,14 @@ using Base.Test
             C = DifferentiableFunction(c, (x,g) -> copy!(g, ∇c(x)) )
 
             x, al = AugmentedLagrangianMethod.optimize(F, C, initial_x)
-            @show x
-            @show c(x)
             @test norm(x - solution_x, Inf) < 1e-6
         end
 
         let # Page 500
             f(x) = -5x[1]^2+x[2]^2
-            ∇f(x) = [-10.0x[1]; 2.0x[2]]
+            ∇f(x) = [-10.0x[1], 2.0x[2]]
             c(x) = x[1]-1
-            ∇c(x) = [1; 0]
+            ∇c(x) = [1  0]
 
             # Initial value is arbitrary...
             initial_x = [3., 0.5]
@@ -156,8 +154,6 @@ using Base.Test
             C = DifferentiableFunction(c, (x,g) -> copy!(g, ∇c(x)) )
 
             x, al = AugmentedLagrangianMethod.optimize(F, C, initial_x)
-            @show x
-            @show c(x)
             @test norm(x - solution_x, Inf) < 1e-6
         end
 
