@@ -1,10 +1,10 @@
-# AugmentedLagrangianMethod.jl
+# ConstrainedOptim.jl
 
-[![Build Status](https://travis-ci.org/cortner/AugmentedLagrangianMethod.jl.svg?branch=master)](https://travis-ci.org/cortner/AugmentedLagrangianMethod.jl)
+[![Build Status](https://travis-ci.org/cortner/ConstrainedOptim.jl.svg?branch=master)](https://travis-ci.org/cortner/ConstrainedOptim.jl)
 
-[![Coverage Status](https://coveralls.io/repos/cortner/AugmentedLagrangianMethod.jl/badge.svg?branch=master&service=github)](https://coveralls.io/github/cortner/AugmentedLagrangianMethod.jl?branch=master)
+[![Coverage Status](https://coveralls.io/repos/cortner/ConstrainedOptim.jl/badge.svg?branch=master&service=github)](https://coveralls.io/github/cortner/ConstrainedOptim.jl?branch=master)
 
-[![codecov.io](http://codecov.io/github/cortner/AugmentedLagrangianMethod.jl/coverage.svg?branch=master)](http://codecov.io/github/cortner/AugmentedLagrangianMethod.jl?branch=master)
+[![codecov.io](http://codecov.io/github/cortner/ConstrainedOptim.jl/coverage.svg?branch=master)](http://codecov.io/github/cortner/ConstrainedOptim.jl?branch=master)
 
 This repository contains a straightforward implementation of
 Nocedal & Wright, Sec. 17.4 "Augmented Lagrangian Methods", for
@@ -31,7 +31,7 @@ and its jacobian `∇c`.
     F = DifferentiableFunction(f, (x,g) -> copy!(g, g_f(x)))
     C = DifferentiableFunction(c, (x,g) -> copy!(g, J_c(x)) )
 
-    x, al = AugmentedLagrangianMethod.optimize(F, C, initial_x)
+    x, al = ConstrainedOptim.optimize(F, C, initial_x)
 ```
 Notice how we specify the gradient as a (column) vector, but the Jacobian as a matrix
 of dimension `length(c)` by `length(x)`. For consistancy, the constraint function should
@@ -69,7 +69,7 @@ solution_x = [1.0, 0.0, 0.0]
 F = DifferentiableFunction(f, (x,g) -> copy!(g, g_f(x)))
 C = DifferentiableFunction(c, (x,g) -> copy!(g, J_c(x)))
 
-x, al = AugmentedLagrangianMethod.optimize(F, C, initial_x)
+x, al = ConstrainedOptim.optimize(F, C, initial_x)
 ```
 The solution is seen to be quite close to the true solution, although
 a tighter tolerance may be warranted in this case.

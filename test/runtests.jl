@@ -1,5 +1,5 @@
-using AugmentedLagrangianMethod
-ALM = AugmentedLagrangianMethod
+using ConstrainedOptim
+COpt = ConstrainedOptim
 using Optim
 using Base.Test
 
@@ -22,18 +22,18 @@ using Base.Test
     @printf("   h   |   err \n")
     @printf("-------|-------------\n")
     # finite-difference test of the augmented Lagrangian implementation
-    al = ALM.AugmentedLagrangian(F, C, x0)
+    al = COpt.AugmentedLagrangian(F, C, x0)
     al.lambda = 0.0
     al.mu = 1.0
-    A = ALM.evaluate(x0, al)
-    dA = ALM.gradient(x0, al)
+    A = COpt.evaluate(x0, al)
+    dA = COpt.gradient(x0, al)
     err = Float64[]
     for p = 2:12
        h = 0.1^p
        dAh = zeros(dA)
        for n = 1:length(x0)
           x0[n] += h
-          dAh[n] = (ALM.evaluate(x0, al) - A)  / h
+          dAh[n] = (COpt.evaluate(x0, al) - A)  / h
           x0[n] -= h
        end
        push!(err, vecnorm(dA - dAh, Inf))
@@ -50,10 +50,10 @@ using Base.Test
 
     println("------------------------------------------------------------")
     println("      Try to optimise something simple")
-    x, al = AugmentedLagrangianMethod.optimize(F, C, x0)
+    x, al = ConstrainedOptim.optimize(F, C, x0)
     println("Converged to ", x, "; λ = ", al.lambda)
     println("First-order optimality: ")
-    al.mu = 0.0; g = ALM.gradient(x, al); C = al.C.f(x)
+    al.mu = 0.0; g = COpt.gradient(x, al); C = al.C.f(x)
     println("   ∇ₓL(x, λ) = ", g)
     println("        c(x) = ", C)
     println("  |∇L(x, λ)| = ", max(vecnorm(g), vecnorm(C)))
@@ -73,7 +73,7 @@ using Base.Test
         F = DifferentiableFunction(f, (x,g) -> copy!(g, ∇f(x)))
         C = DifferentiableFunction(c, (x,g) -> copy!(g, ∇c(x)) )
 
-        x, al = AugmentedLagrangianMethod.optimize(F, C, initial_x)
+        x, al = ConstrainedOptim.optimize(F, C, initial_x)
         @test norm(x - solution_x, Inf) < 1e-6
     end
 
@@ -87,7 +87,7 @@ using Base.Test
         F = DifferentiableFunction(f, (x,g) -> copy!(g, ∇f(x)))
         C = DifferentiableFunction(c, (x,g) -> copy!(g, ∇c(x)) )
 
-        x, al = AugmentedLagrangianMethod.optimize(F, C, initial_x)
+        x, al = ConstrainedOptim.optimize(F, C, initial_x)
         @test norm(x - solution_x, Inf) < 1e-6
     end
 
@@ -120,7 +120,7 @@ using Base.Test
         F = DifferentiableFunction(f, (x,g) -> copy!(g, ∇f(x)))
         C = DifferentiableFunction(c, (x,g) -> copy!(g, ∇c(x)) )
 
-        x, al = AugmentedLagrangianMethod.optimize(F, C, initial_x)
+        x, al = ConstrainedOptim.optimize(F, C, initial_x)
         @test norm(x - solution_x, Inf) < 1e-6
     end
 
@@ -137,7 +137,7 @@ using Base.Test
             F = DifferentiableFunction(f, (x,g) -> copy!(g, ∇f(x)))
             C = DifferentiableFunction(c, (x,g) -> copy!(g, ∇c(x)) )
 
-            x, al = AugmentedLagrangianMethod.optimize(F, C, initial_x)
+            x, al = ConstrainedOptim.optimize(F, C, initial_x)
             @test norm(x - solution_x, Inf) < 1e-6
         end
 
@@ -153,7 +153,7 @@ using Base.Test
             F = DifferentiableFunction(f, (x,g) -> copy!(g, ∇f(x)))
             C = DifferentiableFunction(c, (x,g) -> copy!(g, ∇c(x)) )
 
-            x, al = AugmentedLagrangianMethod.optimize(F, C, initial_x)
+            x, al = ConstrainedOptim.optimize(F, C, initial_x)
             @test norm(x - solution_x, Inf) < 1e-6
         end
 
