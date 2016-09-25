@@ -3,9 +3,25 @@ module ConstrainedOptim
 
 using Optim
 
+export EqualityConstraints
+
+immutable EqualityConstraints
+    c
+    Jc!
+    cJc!
+end
+
+function EqualityConstraints(c, Jc!)
+    function cJc!(x::Array, storage::Array)
+        Jc!(x, storage)
+        return c(x)
+    end
+    return EqualityConstraints(c, Jc!, cJc!)
+end
+
 type AugmentedLagrangian{Tl<:Union{Real, Vector}}
    F::DifferentiableFunction
-   C::DifferentiableFunction
+   C::EqualityConstraints
    lambda::Tl
    mu::Real
    Dc::Matrix
@@ -18,12 +34,12 @@ dim_c(al::AL) = size(Dc,2)  # number of constraints
 
 
 function AugmentedLagrangian(F::DifferentiableFunction,
-                 C::DifferentiableFunction,
+                 C::EqualityConstraints,
                  x0::AbstractVector;
                  lambda=:auto, mu=10.0)
    # TODO: maybe not ideal to evaluate F, C here, maybe better to set
    # dimensions when C is first called??? But see #282
-   C0 = C.f(x0)
+   C0 = C.c(x0)
    dim_x = length(x0)
    dim_c = length(C0)
    if lambda == :auto
@@ -34,7 +50,7 @@ end
 
 
 function evaluate(x, al::AL)
-   c = al.C.f(x)
+   c = al.C.c(x)
    return al.F.f(x) - dot(c, al.lambda) + (0.5*al.mu) * sumabs2(c)
 end
 
@@ -44,7 +60,7 @@ function gradient!(out, x, al::AL)
 end
 
 function eval_and_grad!(out, x, al::AL)
-   c = al.C.fg!(x, al.Dc)
+   c = al.C.cJc!(x, al.Dc)
    f = al.F.fg!(x, out)
    for i = 1:length(c)
        out[:] = out - al.lambda[i] * view(al.Dc, i, :) + (1.0*al.mu) * c[i] * view(al.Dc, i, :)
@@ -63,7 +79,7 @@ gradient(x, al::AL) = gradient!(zeros(x), x, al)
 #
 
 function optimize( F::DifferentiableFunction,
-                   C::DifferentiableFunction,
+                   C::EqualityConstraints,
                    x0::AbstractVector;
                    iterations = 5000,
                    c_tol = 1e-6,
@@ -104,7 +120,7 @@ function optimize( F::DifferentiableFunction,
       x = Optim.minimizer(result)
       nrm_g = Optim.g_norm_trace(result)[end]
 
-      c = C.f(x)    # TODO: this is a superfluous call to C (but #282 would fix this)
+      c = C.c(x)    # TODO: this is a superfluous call to C (but #282 would fix this)
 
       if verbose >= 1
          @printf(" %4d |  %1.4e   %1.4e   %1.2e   %1.2e\n",

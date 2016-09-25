@@ -14,7 +14,7 @@ using Base.Test
 
 
     F = DifferentiableFunction(f, (x,g) -> copy!(g, df(x)) )
-    C = DifferentiableFunction(c, (x,g) -> copy!(g, dc(x)) )
+    C = EqualityConstraints(c, (x,g) -> copy!(g, dc(x)) )
 
 
     println("------------------------------------------------------------")
@@ -53,7 +53,7 @@ using Base.Test
     x, al = ConstrainedOptim.optimize(F, C, x0)
     println("Converged to ", x, "; λ = ", al.lambda)
     println("First-order optimality: ")
-    al.mu = 0.0; g = COpt.gradient(x, al); C = al.C.f(x)
+    al.mu = 0.0; g = COpt.gradient(x, al); C = al.C.c(x)
     println("   ∇ₓL(x, λ) = ", g)
     println("        c(x) = ", C)
     println("  |∇L(x, λ)| = ", max(vecnorm(g), vecnorm(C)))
@@ -71,7 +71,7 @@ using Base.Test
         initial_x = [0.3,0.75]
         solution_x = [1/3, 2/3]
         F = DifferentiableFunction(f, (x,g) -> copy!(g, ∇f(x)))
-        C = DifferentiableFunction(c, (x,g) -> copy!(g, ∇c(x)) )
+        C = EqualityConstraints(c, (x,g) -> copy!(g, ∇c(x)) )
 
         x, al = ConstrainedOptim.optimize(F, C, initial_x)
         @test norm(x - solution_x, Inf) < 1e-6
@@ -85,7 +85,7 @@ using Base.Test
         initial_x = [2.0, 2.0]
         solution_x = [3.0, 3.0]
         F = DifferentiableFunction(f, (x,g) -> copy!(g, ∇f(x)))
-        C = DifferentiableFunction(c, (x,g) -> copy!(g, ∇c(x)) )
+        C = EqualityConstraints(c, (x,g) -> copy!(g, ∇c(x)) )
 
         x, al = ConstrainedOptim.optimize(F, C, initial_x)
         @test norm(x - solution_x, Inf) < 1e-6
@@ -118,7 +118,7 @@ using Base.Test
         solution_x = [(w[2]/w[1])*(γ[1]/γ[2])^(γ[2]/sum(γ))*q^(1/sum(γ));(w[1]/w[2])*(γ[2]/γ[1])^(γ[1]/sum(γ))*q^(1/sum(γ))]
 
         F = DifferentiableFunction(f, (x,g) -> copy!(g, ∇f(x)))
-        C = DifferentiableFunction(c, (x,g) -> copy!(g, ∇c(x)) )
+        C = EqualityConstraints(c, (x,g) -> copy!(g, ∇c(x)) )
 
         x, al = ConstrainedOptim.optimize(F, C, initial_x)
         @test norm(x - solution_x, Inf) < 1e-6
@@ -135,7 +135,7 @@ using Base.Test
             initial_x = [-0.3, -0.5]
             solution_x = [-1.0, -1.0]
             F = DifferentiableFunction(f, (x,g) -> copy!(g, ∇f(x)))
-            C = DifferentiableFunction(c, (x,g) -> copy!(g, ∇c(x)) )
+            C = EqualityConstraints(c, (x,g) -> copy!(g, ∇c(x)) )
 
             x, al = ConstrainedOptim.optimize(F, C, initial_x)
             @test norm(x - solution_x, Inf) < 1e-6
@@ -151,7 +151,7 @@ using Base.Test
             initial_x = [3., 0.5]
             solution_x = [1.0, 0.0]
             F = DifferentiableFunction(f, (x,g) -> copy!(g, ∇f(x)))
-            C = DifferentiableFunction(c, (x,g) -> copy!(g, ∇c(x)) )
+            C = EqualityConstraints(c, (x,g) -> copy!(g, ∇c(x)) )
 
             x, al = ConstrainedOptim.optimize(F, C, initial_x)
             @test norm(x - solution_x, Inf) < 1e-6
