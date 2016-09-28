@@ -25,6 +25,22 @@ function EqualityConstraints(c, Jc!)
     return EqualityConstraints(c, Jc!, cJc!)
 end
 
+export EqualityConstraints
+
+immutable EqualityConstraints
+    c
+    Jc!
+    cJc!
+end
+
+function EqualityConstraints(c, Jc!)
+    function cJc!(x::Array, storage::Array)
+        Jc!(x, storage)
+        return c(x)
+    end
+    return EqualityConstraints(c, Jc!, cJc!)
+end
+
 type AugmentedLagrangian{Tl<:Union{Real, Vector}}
    F::DifferentiableFunction
    C::EqualityConstraints
