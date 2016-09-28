@@ -2,8 +2,14 @@ module ConstrainedOptim
 
 
 using Optim
+import Optim: optimize, Optimizer, @add_generic_fields()
 
-export EqualityConstraints
+export EqualityConstraints, BoundsConstraint, optimize, ProjectedGradientDescent
+
+immutable BoundsConstraint
+    lower
+    upper
+end
 
 immutable EqualityConstraints
     c
@@ -147,6 +153,5 @@ function optimize( F::DifferentiableFunction,
    warn("too many iterations in `ConstrainedOptim.optimize` ")
    return x, al
 end
-
-
+include("optimize.jl")
 end # module
