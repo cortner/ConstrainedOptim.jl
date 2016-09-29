@@ -1,4 +1,3 @@
-
 immutable ProjectedGradientDescent{T} <: Optimizer
     linesearch!::Function
     P::T
@@ -25,15 +24,19 @@ function trace!(tr, state, iteration, method::ProjectedGradientDescent, options)
 end
 
 
+project!(X, eq::ConvexConstraint) = nothing
 
-function project!(X, lower, upper)
+function project!(X, eqc::BoxConstraint)
     @inbounds for (i, x) in enumerate(X)
-        X[i] = max(min(x, upper[i]), lower[i])
+        X[i] = max(min(x, eqc.upper[i]), eqc.lower[i])
     end
 end
 
-project!(X, eqc::BoundsConstraint) = project!(X, eqc.lower, eqc.upper)
-
+function project!(X, eqb::BallConstraint)
+    @inbounds for (i, x) in enumerate(X)
+        X[i] = x/max(eqb.radius, norm(x - eqb.center, eqb.p))
+    end
+end
 
 ProjectedGradientDescent(; linesearch!::Function = Optim.backtracking_linesearch!,
                 P = nothing, precondprep! = (P, x) -> nothing) =
@@ -57,8 +60,6 @@ type ProjectedGradientDescentState{T}
     alpha::T
     mayterminate::Bool
     lsr::Optim.LineSearchResults
-    lower
-    upper
 end
 
 function initial_state{T}(method::ProjectedGradientDescent, options, d, eqc, initial_x::Array{T})
@@ -80,9 +81,7 @@ function initial_state{T}(method::ProjectedGradientDescent, options, d, eqc, ini
                          similar(initial_x), # Buffer of g for line search in state.g_ls
                          1., # Keep track of step size in state.alpha
                          false, # state.mayterminate
-                         Optim.LineSearchResults(T),
-                         eqc.lower,  # remove again
-                         eqc.upper) #remove again
+                         Optim.LineSearchResults(T))
 end
 
 function update_state!{T}(d, eqc, state::ProjectedGradientDescentState{T}, method::ProjectedGradientDescent)
@@ -90,11 +89,9 @@ function update_state!{T}(d, eqc, state::ProjectedGradientDescentState{T}, metho
     A_ldiv_B!(state.s, method.P, state.g)
     state.s = state.x - state.s
     project!(state.s, eqc)
-    @show state.s
     @simd for i in 1:state.n
         @inbounds state.s[i] = state.s[i]-state.x[i]
     end
-    @show state.s
     # Refresh the line search cache
     dphi0 = vecdot(state.g, state.s)
     Optim.clear!(state.lsr)
@@ -121,7 +118,7 @@ function update_g!(d, state, method::ProjectedGradientDescent)
 end
 
 
-function optimize{T, M<:Optimizer}(d, initial_x::Array{T}, bc::BoundsConstraint, method::M, options::OptimizationOptions)
+function optimize{T, M<:Optimizer}(d, initial_x::Array{T}, bc::ConvexConstraint, method::M, options::OptimizationOptions)
     t0 = time() # Initial time stamp used to control early stopping by options.time_limit
 
     if length(initial_x) == 1 && typeof(method) <: NelderMead
